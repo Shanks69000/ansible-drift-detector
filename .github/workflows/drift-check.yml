@@ -62,8 +62,13 @@ jobs:
           for v in $(grep -oP 'changed=\K\d+' /tmp/drift-base.log); do
             CHANGED=$((CHANGED + v))
           done
+          UNREACHABLE=0
+          for v in $(grep -oP 'unreachable=\K\d+' /tmp/drift-base.log); do
+            UNREACHABLE=$((UNREACHABLE + v))
+          done
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
-          if [ "$CHANGED" -gt 0 ]; then
+          echo "unreachable=$UNREACHABLE" >> "$GITHUB_OUTPUT"
+          if [ "$CHANGED" -gt 0 ] || [ "$UNREACHABLE" -gt 0 ]; then
             echo "drift_detected=true" >> "$GITHUB_OUTPUT"
           else
             echo "drift_detected=false" >> "$GITHUB_OUTPUT"
