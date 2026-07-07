@@ -58,7 +58,10 @@ jobs:
       - name: Parse drift report
         id: parse
         run: |
-          CHANGED=$(grep -oP 'changed=\d+' /tmp/drift-base.log | grep -oP '\d+' || echo 0)
+          CHANGED=0
+          for v in $(grep -oP 'changed=\K\d+' /tmp/drift-base.log); do
+            CHANGED=$((CHANGED + v))
+          done
           echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
           if [ "$CHANGED" -gt 0 ]; then
             echo "drift_detected=true" >> "$GITHUB_OUTPUT"
