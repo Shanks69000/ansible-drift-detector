@@ -1,0 +1,57 @@
+Drift Detection Report - 2026-07-07T17:51:00Z
+======================================
+
+PLAY [Configuration de base OS] ************************************************
+
+TASK [Gathering Facts] *********************************************************
+[WARNING]: Platform linux on host bastion is using the discovered Python
+interpreter at /usr/bin/python3.11, but future installation of another Python
+interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-
+core/2.18/reference_appendices/interpreter_discovery.html for more information.
+[WARNING]: Platform linux on host k8s-master is using the discovered Python
+interpreter at /usr/bin/python3.11, but future installation of another Python
+interpreter could change the meaning of that path. See
+https://docs.ansible.com/ansible-
+core/2.18/reference_appendices/interpreter_discovery.html for more information.
+ok: [bastion]
+ok: [k8s-master]
+fatal: [db-server]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 10.10.1.30 port 22: No route to host", "unreachable": true}
+fatal: [k8s-worker1]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 10.10.1.21 port 22: No route to host", "unreachable": true}
+fatal: [k8s-worker2]: UNREACHABLE! => {"changed": false, "msg": "Failed to connect to the host via ssh: ssh: connect to host 10.10.1.22 port 22: No route to host", "unreachable": true}
+
+TASK [Mise a jour des paquets] *************************************************
+ok: [bastion]
+ok: [k8s-master]
+
+TASK [Installation des paquets de base] ****************************************
+ok: [bastion]
+ok: [k8s-master]
+
+TASK [Demarrage et activation de qemu-guest-agent] *****************************
+ok: [bastion]
+ok: [k8s-master]
+
+TASK [Configuration du timezone] ***********************************************
+ok: [bastion]
+ok: [k8s-master]
+
+TASK [Desactivation du swap] ***************************************************
+skipping: [bastion]
+skipping: [k8s-master]
+
+TASK [Suppression du swap dans fstab] ******************************************
+ok: [bastion]
+ok: [k8s-master]
+
+PLAY RECAP *********************************************************************
+bastion                    : ok=6    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+db-server                  : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+k8s-master                 : ok=6    changed=0    unreachable=0    failed=0    skipped=1    rescued=0    ignored=0   
+k8s-worker1                : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+k8s-worker2                : ok=0    changed=0    unreachable=1    failed=0    skipped=0    rescued=0    ignored=0   
+
+
+PLAYBOOK RECAP *****************************************************************
+Playbook run took 0 days, 0 hours, 0 minutes, 10 seconds
+
