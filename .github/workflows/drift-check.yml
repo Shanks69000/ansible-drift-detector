@@ -1,0 +1,94 @@
+name: Ansible Drift Detection
+
+on:
+  schedule:
+    - cron: "0 */12 * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: drift-detection
+  cancel-in-progress: false
+
+jobs:
+  drift-check:
+    runs-on: self-hosted
+    steps:
+      - name: Checkout drift-detector repo
+        uses: actions/checkout@v4
+
+      - name: Checkout infra-as-code-homelab repo
+        uses: actions/checkout@v4
+        with:
+          repository: Shanks69000/infra-as-code-homelab
+          path: infra-as-code-homelab
+
+      - name: Start WireGuard tunnel
+        run: |
+          sudo ip link add wglab type wireguard 2>/dev/null || true
+          echo "${{ secrets.WG_PRIVATE_KEY }}" | sudo tee /etc/wireguard/privkey-ci.txt > /dev/null
+          sudo chmod 600 /etc/wireguard/privkey-ci.txt
+          sudo wg set wglab private-key /etc/wireguard/privkey-ci.txt
+          sudo wg set wglab peer ${{ secrets.WG_SERVER_PUBLIC_KEY }} endpoint ${{ secrets.WG_SERVER_ENDPOINT }} allowed-ips 10.10.1.0/24,10.200.200.0/24 persistent-keepalive 25
+          sudo ip address add 10.200.200.2/24 dev wglab 2>/dev/null || true
+          sudo ip link set wglab up
+          sudo ip route add 10.10.1.0/24 dev wglab 2>/dev/null || true
+          sleep 5
+          sudo wg show wglab
+
+      - name: Install Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: Run drift check (base playbook)
+        working-directory: infra-as-code-homelab/ansible
+        run: |
+          ansible-playbook -i inventory/hosts.yml playbooks/base.yml --check --diff --diff-always > /tmp/drift-base.log 2>&1 || true
+          cat /tmp/drift-base.log
+
+      - name: Parse drift report
+        id: parse
+        run: |
+          CHANGED=$(grep -oP 'changed=\d+' /tmp/drift-base.log | grep -oP '\d+' || echo 0)
+          echo "changed=$CHANGED" >> "$GITHUB_OUTPUT"
+          if [ "$CHANGED" -gt 0 ]; then
+            echo "drift_detected=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "drift_detected=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Generate report file
+        run: |
+          mkdir -p reports
+          echo "Drift Detection Report - $(date -u +%Y-%m-%dT%H:%M:%SZ)" > drift_report.txt
+          echo "======================================" >> drift_report.txt
+          cat /tmp/drift-base.log >> drift_report.txt
+          cp drift_report.txt reports/drift-$(date -u +%Y%m%d-%H%M%S).txt
+
+      - name: Send drift report by email
+        if: steps.parse.outputs.drift_detected == 'true'
+        uses: dawidd6/action-send-mail@v3
+        with:
+          server_address: smtp.gmail.com
+          server_port: 465
+          username: ${{ secrets.SMTP_USERNAME }}
+          password: ${{ secrets.SMTP_PASSWORD }}
+          subject: "Drift detected - ansible-drift-detector"
+          to: ${{ secrets.NOTIFY_EMAIL }}
+          from: Drift Detector
+          body: file://drift_report.txt
+
+      - name: Commit report
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git pull --rebase origin main
+          git add reports/
+          git diff --cached --quiet || git commit -m "report: drift check $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push
+
+      - name: Stop WireGuard tunnel
+        if: always()
+        run: |
+          sudo ip link delete wglab 2>/dev/null || true
+          sudo rm -f /etc/wireguard/privkey-ci.txt
