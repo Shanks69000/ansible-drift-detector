@@ -45,7 +45,7 @@ jobs:
       - name: Run drift check (base playbook)
         working-directory: infra-as-code-homelab/ansible
         run: |
-          ansible-playbook -i inventory/hosts.yml playbooks/base.yml --check --diff --diff-always > /tmp/drift-base.log 2>&1 || true
+          ansible-playbook -i inventory/hosts.yml playbooks/base.yml --check --diff > /tmp/drift-base.log 2>&1 || true
           cat /tmp/drift-base.log
 
       - name: Parse drift report
