@@ -1,0 +1,18 @@
+Drift Detection Report - 2026-07-07T17:23:04Z
+======================================
+[WARNING]: Unable to parse /home/shanks/actions-runner/_work/ansible-drift-
+detector/ansible-drift-detector/infra-as-code-
+homelab/ansible/inventory/hosts.yml as an inventory source
+[WARNING]: No inventory was parsed, only implicit localhost is available
+[WARNING]: provided hosts list is empty, only localhost is available. Note that
+the implicit localhost does not match 'all'
+
+PLAY [Configuration de base OS] ************************************************
+skipping: no hosts matched
+
+PLAY RECAP *********************************************************************
+
+
+PLAYBOOK RECAP *****************************************************************
+Playbook run took 0 days, 0 hours, 0 minutes, 0 seconds
+
