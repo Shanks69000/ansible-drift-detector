@@ -24,6 +24,13 @@ jobs:
           repository: Shanks69000/infra-as-code-homelab
           path: infra-as-code-homelab
 
+      - name: Generate inventory
+        run: |
+          mkdir -p infra-as-code-homelab/ansible/inventory
+          cat > infra-as-code-homelab/ansible/inventory/hosts.yml << 'EOF'
+          ${{ secrets.ANSIBLE_INVENTORY }}
+          EOF
+
       - name: Start WireGuard tunnel
         run: |
           sudo ip link add wglab type wireguard 2>/dev/null || true
