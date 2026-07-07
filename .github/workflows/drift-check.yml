@@ -12,6 +12,8 @@ concurrency:
 jobs:
   drift-check:
     runs-on: self-hosted
+    permissions:
+      contents: write
     steps:
       - name: Checkout drift-detector repo
         uses: actions/checkout@v4
